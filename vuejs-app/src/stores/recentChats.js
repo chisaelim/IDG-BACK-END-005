@@ -13,17 +13,26 @@ export const useRecentChatsStore = defineStore("recentChats", {
     getAllChats: (state) => state.chats,
   },
   actions: {
+    sortChatMessages(chat) {
+      chat.messages.sort((a, b) => {
+        return new Date(a.created_at) - new Date(b.created_at);
+      });
+    },
     sortChats() {
-      // replace old chats with new ones and sort them by last message date
+      // Sort messages within each chat first
+      this.chats.forEach((chat) => {
+        this.sortChatMessages(chat);
+      });
 
+      // Then sort chats by the date of the last message
       this.chats.sort((a, b) => {
         const lastMessageA =
           a.messages.length > 0
-            ? new Date(a.messages[a.messages.length - 1].updated_at)
+            ? new Date(a.messages[a.messages.length - 1].created_at)
             : new Date(a.created_at);
         const lastMessageB =
           b.messages.length > 0
-            ? new Date(b.messages[b.messages.length - 1].updated_at)
+            ? new Date(b.messages[b.messages.length - 1].created_at)
             : new Date(b.created_at);
         return lastMessageB - lastMessageA;
       });
@@ -57,14 +66,44 @@ export const useRecentChatsStore = defineStore("recentChats", {
       // Remove chat from store
       this.chats = this.chats.filter((c) => Number(c.id) !== Number(chatId));
     },
-    clearAllChats() {
-      // Clear all chats (useful for logout or sync with empty database)
-      this.chats = [];
+    syncMultiChatMessages(chatId, messages) {
+      const chat = this.getChatById(chatId);
+      if (chat) {
+        messages.forEach((message) => {
+          const index = chat.messages.findIndex(
+            (m) => Number(m.id) === Number(message.id),
+          );
+          if (index !== -1) {
+            chat.messages[index] = message;
+          } else {
+            chat.messages.push(message);
+          }
+        });
+        this.sortChats();
+      }
     },
-    replaceAllChats(chats) {
-      // Replace entire chat list (for database sync)
-      this.chats = chats;
-      this.sortChats();
+    syncChatMessage(chatId, message) {
+      const chat = this.getChatById(chatId);
+      if (chat) {
+        const index = chat.messages.findIndex(
+          (m) => Number(m.id) === Number(message.id),
+        );
+        if (index !== -1) {
+          chat.messages[index] = message;
+        } else {
+          chat.messages.push(message);
+        }
+        this.sortChats();
+      }
+    },
+    removeChatMessage(chatId, messageId) {
+      const chat = this.getChatById(chatId);
+      if (chat) {
+        chat.messages = chat.messages.filter(
+          (m) => Number(m.id) !== Number(messageId),
+        );
+        this.sortChats();
+      }
     },
   },
 });
