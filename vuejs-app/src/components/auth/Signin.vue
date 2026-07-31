@@ -6,7 +6,7 @@
           <router-link to="/" class="h1"><b>Admin</b>LTE</router-link>
         </div>
         <div class="card-body">
-          <p class="login-box-msg">Sign in to start your session</p>
+          <p class="login-box-msg">Login to start your session</p>
           <form @submit.prevent="signIn">
             <div class="input-group mb-3">
               <input type="email" v-model="user.email" class="form-control" placeholder="Email"
