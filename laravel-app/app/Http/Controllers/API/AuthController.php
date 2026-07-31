@@ -40,7 +40,7 @@ class AuthController extends Controller
 
     function signin(SigninRequest $request)
     {
-        $user = User::where('email', $request->user_email)->first();
+        $user = User::where('email', $request->email)->first();
 
         if (!$user->hasVerifiedEmail()) {
             throw ValidationException::withMessages([
